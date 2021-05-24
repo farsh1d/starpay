@@ -7,64 +7,78 @@ use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Requests\UserRequest;
  
 class AuthController extends Controller
 {
-    public function register(Request $request){
+    public function register(UserRequest $request){
 
-        $fields = $request->validate([
-            'name'  => 'required | string',
-            'email' => 'required | email | unique:users,email',
-            'password' => 'required | string | confirmed'
-        ]);
+        $params = $request->all();
 
-        $user = User::create([
-            'name' => $fields['name'],
-            'email' => $fields['email'],
-            'password' => bcrypt($fields['password']),
-        ]);
+        $params['password'] = bcrypt($params['password']);
+        
+        $user = User::create(  $params);
 
         $token = $user->createToken('starpaytoken')->plainTextToken;
 
-        $response =  [
-            'user' => $user,
-            'token' => $token
-        ];
+        return response()->json([
 
-        return response($response, 201);
+            'status' => 201,
+            'data'   => [
+                'user'  => $user,
+                'token' => $token
+            ]
+        ]);
+        
     }
 
-    public function login( Request $request ) {
-        $fields = $request->validate([
-            'email' => 'required | eamil',
-            'password' => 'required | string'
-        ]);
-
+    public function login( UserRequest $request ) {
+      
         // Check email
-        $user = User::where('email', $fields['email'])->first();
+        $user = User::where('email', $request->email )->first();
 
         // Check password
-        if(!$user || !Hash::check($fields['password'], $user->password)) {
-            return response([
-                'message' => 'Login Failed'
-            ], 401);
+        if(!$user || !Hash::check($request->password, $user->password)) {           
+
+            return response()->json([
+
+                'status' => 401,
+                'data'   => [ 'message' => 'Login Failed' ]
+            ]);
+
         }
 
         $token = $user->createToken('myapptoken')->plainTextToken;
 
-        $response = [
-            'user' => $user,
-            'token' => $token
-        ];
+        return response()->json([
 
-        return response($response, 201);
+            'status' => 201,
+            'data'   => [
+                'user'  => $user,
+                'token' => $token
+            ]
+        ]);
+        
     }
 
-    public function logout(Request $request) {
-
+    public function logout() {
+        
         auth()->user()->tokens()->delete();
-        return response (['Success Loged out :)']);
+
+        return response()->json([
+
+            'status' => 201,
+            'data'   => [ 'message' => 'Success Loged out :)' ]
+        ]);
 
     }
 
+    public function user() {
+
+        return response()->json([
+
+            'status' => 200,
+            'data'   => auth()->user()
+        ]);
+    }
 }
