@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use App\Http\Requests\PostRequest;
 
 class PostController extends Controller
 {
@@ -15,34 +17,34 @@ class PostController extends Controller
      */
     public function index()
     {
-        // $u = User::all()->first();
-        // return $u->posts->first()->user;
-        return Post::all();
+        return response()->json([
+
+            'status' => 200,
+            'data'   => Post::all()
+        ]);
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\PostRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(PostRequest $request)
     {
-        // TODO: complete validation , rules , response
-        $request->validate([
-            'title' => 'required',
-            'body' => 'required'
+
+        $post = Post::create( array_merge(
+
+            $request->all(), 
+            ['user_id' => $request->user()->id]
+        ));
+
+        return response()->json([
+
+            'status'    => 200,
+            'post_id'   => $post->id
         ]);
         
-        $post = Post::create([
-
-            'title' => $request->title,
-            'body' => $request->body,
-            'user_id' => 1
-        ]);
-
-        //TODO: Must Json Response
-        return $post->id;
     }
 
     /**
@@ -51,29 +53,33 @@ class PostController extends Controller
      * @param  \App\Models\Post  $post
      * @return \Illuminate\Http\Response
      */
-    public function show(Post $post)
+    public function show( Post $post )
     {
-       return $post;
+        return response()->json([
+
+            'status' => 200,
+            'post'   => $post
+        ]);
     }
 
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\PostRequest  $request
      * @param  \App\Models\Post  $post
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Post $post)
+    public function update(PostRequest $request, Post $post)
     {
-        // return $request;
-        // return $post;
-        $request->validate([
-            'title' => 'required',
-            'body' => 'required'
+        $params = $request->all();
+        $post->update($params);
+
+        return response()->json([
+
+            'status'    => 200,
+            'post'   => $post
         ]);
-        
-        $post->update($request->all());
 
     }
 
@@ -85,6 +91,14 @@ class PostController extends Controller
      */
     public function destroy(Post $post)
     {
-        return $post->destroy();
+
+        $post->delete();
+        return response()->json([
+
+            'status'    => 200,
+            'post_id'   => $post
+        ]);   
+
+
     }
 }
