@@ -18,13 +18,6 @@ class PostController extends Controller
      */
     public function index()
     {        
-        if (! Gate::allows('isUser', request()->user())) {
-            return response()->json([
-                'status' => 403,
-                'data'   => "You dont have access to this action!"
-            ]);
-        }
-
         return response()->json([
 
             'status' => 200,
